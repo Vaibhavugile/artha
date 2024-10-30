@@ -5,6 +5,8 @@ import { Link } from 'react-router-dom';
 import UserSidebar from './UserSidebar'; 
 import UserHeader from './UserHeader';    
 import './TableList.css';
+import { useUser } from './Auth/UserContext'; // Assuming you're using a UserContext for branchCode
+
 
 const TableList = () => {
   const [tables, setTables] = useState([]);
@@ -15,15 +17,27 @@ const TableList = () => {
   const [responsibleName, setResponsibleName] = useState('');
   const [discountPercentage, setDiscountPercentage] = useState(0); 
   const [sidebarOpen, setSidebarOpen] = useState(false); 
+  const [branchCode, setBranchCode] = useState(''); // Store branch code
+  const { userData } = useUser(); // Get user data from context
+
 
   const handleSidebarToggle = () => {
     setSidebarOpen(!sidebarOpen); 
   };
+  useEffect(() => {
+    if (userData && userData.branchCode) {
+      setBranchCode(userData.branchCode);
+    }
+  }, [userData]);
 
   useEffect(() => {
     const fetchTables = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'tables'));
+        const q= query(
+          collection(db,'tables'),
+          where('branchCode','==',userData.branchCode)
+        )
+        const querySnapshot = await getDocs(q);
         const tableData = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
@@ -88,7 +102,7 @@ const TableList = () => {
       console.log("Inventory Updates Object:", inventoryUpdates); // Log the inventory updates object
   
       for (const [ingredientName, quantityUsed] of Object.entries(inventoryUpdates)) {
-        const q = query(collection(db, 'Inventory'), where('ingredientName', '==', ingredientName));
+        const q = query(collection(db, 'Inventory'),where('branchCode', '==', branchCode), where('ingredientName', '==', ingredientName) );
         const querySnapshot = await getDocs(q);
   
         querySnapshot.forEach(async (doc) => {
@@ -96,7 +110,7 @@ const TableList = () => {
           const currentQuantity = doc.data().quantity;
           const updatedQuantity = currentQuantity - quantityUsed; // Reduce the quantity
   
-          console.log(`Updating ingredient: ${ingredientName}, Current quantity: ${currentQuantity}, Quantity used: ${quantityUsed}, Updated quantity: ${updatedQuantity}`); // Log the update details
+          console.log(`Updating ingredient: ${ingredientName}, Current quantity: ${currentQuantity}, Quantity used: ${quantityUsed}, Updated quantity: ${updatedQuantity},Branch Code :${userData.branchCode}`); // Log the update details
           
           await updateDoc(ingredientRef, { quantity: updatedQuantity });
         });

@@ -1,19 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect } from 'react';
 import { db } from '../firebase'; // Firebase initialization
 import { collection, addDoc } from 'firebase/firestore'; // Import addDoc instead of using db.collection directly
+import { useUser } from '../components/Auth/UserContext'; // Assuming you're using a UserContext for branchCode
 
 function AddIngredient() {
   const [ingredientName, setIngredientName] = useState('');
   const [quantity, setQuantity] = useState('');
   const [unit, setUnit] = useState('grams');
-
+  const [branchCode, setBranchCode] = useState(''); // Store branch code
+  const { userData } = useUser();
+  useEffect(() => {
+    if (userData && userData.branchCode) {
+      setBranchCode(userData.branchCode);
+    }
+  }, [userData]);
   const handleAddIngredient = async () => {
     // Add new ingredient to Firestore
+    
     try {
       const docRef = await addDoc(collection(db, 'Inventory'), {
         ingredientName,
         quantity: parseFloat(quantity),
         unit,
+        branchCode,
       });
       alert('Ingredient added successfully!');
       setIngredientName('');

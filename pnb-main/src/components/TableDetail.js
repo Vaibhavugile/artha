@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, getDocs,query, where, } from 'firebase/firestore';
 import { db } from '../firebase';
 import './TableDetail.css';
+import { useUser } from './Auth/UserContext'; // Assuming you're using a UserContext for branchCode
 
 const TableDetail = () => {
   const { tableId } = useParams();
@@ -16,6 +17,8 @@ const TableDetail = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [expandedSubcategory, setExpandedSubcategory] = useState(null);
+  const { userData } = useUser(); // Get user data from context
+  const [branchCode, setBranchCode] = useState(''); // Store branch code
 
   // Fetch table details
   useEffect(() => {
@@ -29,11 +32,20 @@ const TableDetail = () => {
     };
     fetchTable();
   }, [tableId]);
+  useEffect(() => {
+    if (userData && userData.branchCode) {
+      setBranchCode(userData.branchCode);
+    }
+  }, [userData]);
 
   // Fetch available products and group by subcategory
   useEffect(() => {
     const fetchProducts = async () => {
-      const productsCollection = collection(db, 'products');
+      const productsCollection = query(
+        collection(db,'products'),
+        where('branchCode','==',userData.branchCode)
+      )
+
       const productsSnapshot = await getDocs(productsCollection);
       const productList = productsSnapshot.docs.map(doc => ({
         id: doc.id,
@@ -62,15 +74,7 @@ const TableDetail = () => {
   }, []);
 
   // Fetch menu items for orders
-  useEffect(() => {
-    const fetchMenuItems = async () => {
-      const menuSnapshot = await getDocs(collection(db, 'menu'));
-      const menuData = menuSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setMenuItems(menuData);
-    };
-
-    fetchMenuItems();
-  }, []);
+  
 
   // Handle quantity adjustment for each product
   const handleQuantityChange = (productId, quantityChange) => {
@@ -164,55 +168,10 @@ const TableDetail = () => {
   };
 
   // Handle adding items to selected orders
-  const handleAddToOrder = (item) => {
-    const existingOrder = selectedOrders.find(order => order.id === item.id);
-    if (existingOrder) {
-      const updatedOrders = selectedOrders.map(order => {
-        if (order.id === item.id) {
-          return { ...order, quantity: order.quantity + 1 };
-        }
-        return order;
-      });
-      setSelectedOrders(updatedOrders);
-    } else {
-      setSelectedOrders([...selectedOrders, { ...item, quantity: 1 }]);
-    }
-  };
 
-  const handleRemoveFromOrder = (itemId) => {
-    const updatedOrders = selectedOrders.filter(order => order.id !== itemId);
-    setSelectedOrders(updatedOrders);
-  };
 
-  const handleSubmitOrder = async () => {
-    const tableRef = doc(db, 'tables', tableId);
-    const updatedOrders = [...(table.orders || []), ...selectedOrders];
+ 
 
-    // Prepare ingredient usage
-    const ingredientUsage = {};
-    selectedOrders.forEach(order => {
-      if (order.ingredients) {
-        order.ingredients.forEach(ingredient => {
-          if (!ingredientUsage[ingredient.ingredientName]) {
-            ingredientUsage[ingredient.ingredientName] = 0;
-          }
-          ingredientUsage[ingredient.ingredientName] += ingredient.quantity * order.quantity; // Calculate total usage
-        });
-      }
-    });
-
-    try {
-      await updateDoc(tableRef, {
-        orders: updatedOrders,
-        orderStatus: 'Running Order',
-        ingredientUsage // Save ingredient usage along with the order
-      });
-      alert('Order submitted successfully!');
-      setSelectedOrders([]); // Clear selected orders
-    } catch (error) {
-      console.error("Error submitting order: ", error);
-    }
-  };
   return (
     <div>
       {table ? (

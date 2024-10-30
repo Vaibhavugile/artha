@@ -1,15 +1,25 @@
-import React, { useState } from 'react';
-import { addDoc, collection } from 'firebase/firestore';
+import React, { useState,useEffect  } from 'react';
+import { addDoc, collection,getDocs,query, where,  } from 'firebase/firestore';
 import { db } from '../firebase';
+import { useUser } from './Auth/UserContext'; // Assuming you're using a UserContext for branchCode
+
 
 const TableForm = () => {
   const [tableNumber, setTableNumber] = useState('');
+  const [branchCode, setBranchCode] = useState(''); // Store branch code
+  const { userData } = useUser(); 
+  useEffect(() => {
+    if (userData && userData.branchCode) {
+      setBranchCode(userData.branchCode);
+    }
+  }, [userData]);// Get user data from context
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await addDoc(collection(db, 'tables'), {
         tableNumber,
+        branchCode,
         orders: []  // Initialize with an empty orders array
       });
       setTableNumber('');

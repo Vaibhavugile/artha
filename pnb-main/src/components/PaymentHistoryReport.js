@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs,query, where,   } from 'firebase/firestore';
 import { db } from '../firebase';
 import './payreport.css'; // Import your CSS file for styles
 import UserSidebar from './UserSidebar'; // Import the UserSidebar component
 import UserHeader from './UserHeader'; // Import the UserHeader component
+import { useUser } from './Auth/UserContext'; // Assuming you're using a UserContext for branchCode
 
 const PaymentHistoryReport = () => {
   const [paymentHistory, setPaymentHistory] = useState([]);
@@ -11,11 +12,22 @@ const PaymentHistoryReport = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false); // Sidebar toggle state
   const [filterDate, setFilterDate] = useState(''); // For storing the selected filter date
   const [filteredData, setFilteredData] = useState([]); // Filtered payment data for the selected date
+  const [branchCode, setBranchCode] = useState(''); // Store branch code
+  const { userData } = useUser(); // Get user data from context
 
+  useEffect(() => {
+    if (userData && userData.branchCode) {
+      setBranchCode(userData.branchCode);
+    }
+  }, [userData]);
   useEffect(() => {
     const fetchPaymentHistory = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'tables'));
+        const q= query(
+          collection(db,'tables'),
+          where('branchCode','==',userData.branchCode)
+        )
+        const querySnapshot = await getDocs(q);
         const historyData = [];
 
         querySnapshot.forEach(doc => {

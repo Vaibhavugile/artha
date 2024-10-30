@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, getDocs } from 'firebase/firestore';
+import { collection, addDoc, getDocs,query, where,  } from 'firebase/firestore';
+
+
 import { db } from '../firebase';
 import UserSidebar from './UserSidebar'; // Import the UserSidebar component
 import UserHeader from './UserHeader';   // Import the UserHeader component
+import { useUser } from './Auth/UserContext'; // Assuming you're using a UserContext for branchCode
 
 const ProductForm = () => {
   const [productName, setProductName] = useState('');
@@ -11,15 +14,25 @@ const ProductForm = () => {
   const [ingredients, setIngredients] = useState([{ ingredientName: '', quantityUsed: '' }]);
   const [allIngredients, setAllIngredients] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [branchCode, setBranchCode] = useState(''); // Store branch code
+  const { userData } = useUser(); // Get user data from context
 
   const handleSidebarToggle = () => {
     setSidebarOpen(!sidebarOpen);
   };
-
+  useEffect(() => {
+    if (userData && userData.branchCode) {
+      setBranchCode(userData.branchCode);
+    }
+  }, [userData]);
   // Fetch all ingredients from the inventory to select from
   useEffect(() => {
     const fetchIngredients = async () => {
-      const snapshot = await getDocs(collection(db, 'Inventory'));
+      const q= query(
+        collection(db,'Inventory'),
+        where('branchCode','==',userData.branchCode)
+      )
+      const snapshot = await getDocs(q);
       const ingredientsList = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -45,6 +58,7 @@ const ProductForm = () => {
     try {
       await addDoc(collection(db, "products"), {
         name: productName,
+        branchCode,
         price: parseFloat(price),
         subcategory: subcategory,
         ingredients: ingredients.filter(ing => ing.ingredientName && ing.quantityUsed) // Filter out empty fields

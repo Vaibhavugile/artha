@@ -1,21 +1,34 @@
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs,query, where,} from 'firebase/firestore';
 import { db } from '../firebase';
 import UserSidebar from './UserSidebar';  // Import the UserSidebar component
 import UserHeader from './UserHeader';    // Import the UserHeader component
-           // Assuming you have some custom CSS for this page
+import { useUser } from './Auth/UserContext'; // Assuming you're using a UserContext for branchCode
+ 
+// Assuming you have some custom CSS for this page
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false); // Sidebar toggle state
+  const [branchCode, setBranchCode] = useState(''); // Store branch code
+  const { userData } = useUser(); // Get user data from context
 
   const handleSidebarToggle = () => {
     setSidebarOpen(!sidebarOpen); // Toggle sidebar visibility
   };
+  useEffect(() => {
+    if (userData && userData.branchCode) {
+      setBranchCode(userData.branchCode);
+    }
+  }, [userData]);
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const productSnapshot = await getDocs(collection(db, "products"));
+      const q = query(
+        collection(db,'products'),
+        where('branchCode','==',userData.branchCode)
+      )
+      const productSnapshot = await getDocs(q);
       const productList = productSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),

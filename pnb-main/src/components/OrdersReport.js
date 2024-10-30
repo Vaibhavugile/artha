@@ -1,18 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs,query, where, } from 'firebase/firestore';
 import { db } from '../firebase';
 import './Report.css'; // Import your CSS file for report styles
 import UserSidebar from './UserSidebar'; // Import the UserSidebar component
 import UserHeader from './UserHeader'; // Import the UserHeader component
+import { useUser } from './Auth/UserContext'; // Assuming you're using a UserContext for branchCode
 
 const OrdersReport = () => {
   const [tables, setTables] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false); // Sidebar toggle state
+  const [branchCode, setBranchCode] = useState(''); // Store branch code
+  const { userData } = useUser(); 
+  useEffect(() => {
+    if (userData && userData.branchCode) {
+      setBranchCode(userData.branchCode);
+    }
+  }, [userData]);// Get user data from context
 
   useEffect(() => {
     const fetchTables = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'tables'));
+        const q= query(
+          collection(db,'tables'),
+          where('branchCode','==',userData.branchCode)
+        )
+        const querySnapshot = await getDocs(q);
         const tableData = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
