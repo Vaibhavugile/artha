@@ -1,37 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, getDocs,query, where,  } from 'firebase/firestore';
-
-
+import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
-import UserSidebar from './UserSidebar'; // Import the UserSidebar component
-import UserHeader from './UserHeader';   // Import the UserHeader component
-import { useUser } from './Auth/UserContext'; // Assuming you're using a UserContext for branchCode
+import UserSidebar from './UserSidebar';
+import UserHeader from './UserHeader';
+import { useUser } from './Auth/UserContext';
+import './ProductForm.css';
 
 const ProductForm = () => {
   const [productName, setProductName] = useState('');
   const [price, setPrice] = useState('');
-  const [subcategory, setSubcategory] = useState('');  // New state for subcategory
-  const [ingredients, setIngredients] = useState([{ ingredientName: '', quantityUsed: '' }]);
+  const [subcategory, setSubcategory] = useState('');
+  const [ingredients, setIngredients] = useState([{ category: '', ingredientName: '', quantityUsed: '' }]);
   const [allIngredients, setAllIngredients] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [branchCode, setBranchCode] = useState(''); // Store branch code
-  const { userData } = useUser(); // Get user data from context
+  const [branchCode, setBranchCode] = useState('');
+  const { userData } = useUser();
 
   const handleSidebarToggle = () => {
     setSidebarOpen(!sidebarOpen);
   };
+
   useEffect(() => {
     if (userData && userData.branchCode) {
       setBranchCode(userData.branchCode);
     }
   }, [userData]);
-  // Fetch all ingredients from the inventory to select from
+
   useEffect(() => {
     const fetchIngredients = async () => {
-      const q= query(
-        collection(db,'Inventory'),
-        where('branchCode','==',userData.branchCode)
-      )
+      const q = query(
+        collection(db, 'Inventory'),
+        where('branchCode', '==', userData.branchCode)
+      );
       const snapshot = await getDocs(q);
       const ingredientsList = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -39,12 +39,12 @@ const ProductForm = () => {
       }));
       setAllIngredients(ingredientsList);
     };
-    
+
     fetchIngredients();
-  }, []);
+  }, [userData.branchCode]);
 
   const handleAddIngredientField = () => {
-    setIngredients([...ingredients, { ingredientName: '', quantityUsed: '' }]);
+    setIngredients([...ingredients, { category: '', ingredientName: '', quantityUsed: '' }]);
   };
 
   const handleInputChange = (index, field, value) => {
@@ -60,14 +60,14 @@ const ProductForm = () => {
         name: productName,
         branchCode,
         price: parseFloat(price),
-        subcategory: subcategory,
-        ingredients: ingredients.filter(ing => ing.ingredientName && ing.quantityUsed) // Filter out empty fields
+        subcategory,
+        ingredients: ingredients.filter(ing => ing.ingredientName && ing.quantityUsed)
       });
       alert('Product added successfully!');
       setProductName('');
       setPrice('');
       setSubcategory('');
-      setIngredients([{ ingredientName: '', quantityUsed: '' }]); // Reset ingredients
+      setIngredients([{ category: '', ingredientName: '', quantityUsed: '' }]);
     } catch (error) {
       console.error("Error adding product: ", error);
     }
@@ -79,14 +79,15 @@ const ProductForm = () => {
       <div className="product-form-content">
         <UserHeader onMenuClick={handleSidebarToggle} isSidebarOpen={sidebarOpen} />
 
-        <h2>Add New Product</h2>
-        <form onSubmit={handleSubmit}>
+        <h2 className="product-form-title" style={{ marginLeft: '10px', marginTop: '100px' }}>Add New Product</h2>
+        <form onSubmit={handleSubmit} className="product-form">
           <input
             type="text"
             value={productName}
             onChange={(e) => setProductName(e.target.value)}
             placeholder="Product Name"
             required
+            className="product-form-input"
           />
           <input
             type="number"
@@ -94,6 +95,7 @@ const ProductForm = () => {
             onChange={(e) => setPrice(e.target.value)}
             placeholder="Price"
             required
+            className="product-form-input"
           />
           <input
             type="text"
@@ -101,32 +103,48 @@ const ProductForm = () => {
             onChange={(e) => setSubcategory(e.target.value)}
             placeholder="Subcategory"
             required
+            className="product-form-input"
           />
-
-          <h2>Ingredients</h2>
+          <h3 className="ingredients-title">Ingredients</h3>
           {ingredients.map((ingredient, index) => (
-            <div key={index}>
+            <div key={index} className="ingredient-field">
+              <select
+                value={ingredient.category}
+                onChange={(e) => handleInputChange(index, 'category', e.target.value)}
+                className="ingredient-select"
+              >
+                <option value="">Select Category</option>
+                {[...new Set(allIngredients.map(ing => ing.category))].map(category => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
               <select
                 value={ingredient.ingredientName}
                 onChange={(e) => handleInputChange(index, 'ingredientName', e.target.value)}
+                className="ingredient-select"
               >
                 <option value="">Select Ingredient</option>
-                {allIngredients.map((ing) => (
-                  <option key={ing.id} value={ing.ingredientName}>
-                    {ing.ingredientName} ({ing.quantity} {ing.unit})
-                  </option>
-                ))}
+                {allIngredients
+                  .filter(ing => ing.category === ingredient.category)
+                  .map(ing => (
+                    <option key={ing.id} value={ing.ingredientName}>
+                      {ing.ingredientName} ({ing.quantity} {ing.unit})
+                    </option>
+                  ))}
               </select>
               <input
                 type="number"
                 placeholder="Quantity Used"
                 value={ingredient.quantityUsed}
                 onChange={(e) => handleInputChange(index, 'quantityUsed', e.target.value)}
+                className="ingredient-quantity-input"
               />
             </div>
           ))}
-          <button type="button" onClick={handleAddIngredientField}>Add More Ingredients</button>
-          <button type="submit">Add Product</button>
+          <button type="button" onClick={handleAddIngredientField} className="add-ingredient-button">Add More Ingredients</button>
+          <button type="submit" className="submit-product-button">Add Product</button>
         </form>
       </div>
     </div>

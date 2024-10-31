@@ -18,15 +18,24 @@ const UserSidebar = ({isOpen}) => {
                Billing </Link>
           </li>
 
-          <li className={`sidebar-link ${location.pathname === '/add-product' ? 'active' : ''}`}>
-            <Link to="/add-product" >
-              Add Product </Link>
+          <li className={`sidebar-link ${location.pathname === '/add-table' ? 'active' : ''}`}>
+            <Link to="/add-table" >
+              Add Table </Link>
           </li>
           
           
           <li className={`sidebar-link ${location.pathname === '/products' ? 'active' : ''}`}>
             <Link to="/products"> 
             Product</Link>
+          </li>
+          <li className={`sidebar-link ${location.pathname === '/inventorydashboard' ? 'active' : ''}`}>
+            <Link to="/inventorydashboard"> 
+            Inventory</Link>
+          </li>
+
+          <li className={`sidebar-link ${location.pathname === '/vendordashboard' ? 'active' : ''}`}>
+            <Link to="/vendordashboard"> 
+            Vendors</Link>
           </li>
           
           <li className={`sidebar-link ${location.pathname === '/report/order' ? 'active' : ''}`}>

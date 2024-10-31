@@ -1,10 +1,11 @@
 import React, { useState , useEffect } from 'react';
 import { db } from '../firebase'; // Firebase initialization
-import { collection, addDoc } from 'firebase/firestore'; // Import addDoc instead of using db.collection directly
+import { collection, addDoc ,} from 'firebase/firestore'; // Import addDoc instead of using db.collection directly
 import { useUser } from '../components/Auth/UserContext'; // Assuming you're using a UserContext for branchCode
 
 function AddIngredient() {
   const [ingredientName, setIngredientName] = useState('');
+  const[category,setCategory]=useState('')
   const [quantity, setQuantity] = useState('');
   const [unit, setUnit] = useState('grams');
   const [branchCode, setBranchCode] = useState(''); // Store branch code
@@ -20,12 +21,14 @@ function AddIngredient() {
     try {
       const docRef = await addDoc(collection(db, 'Inventory'), {
         ingredientName,
+        category,
         quantity: parseFloat(quantity),
         unit,
         branchCode,
       });
       alert('Ingredient added successfully!');
       setIngredientName('');
+      setCategory('');
       setQuantity('');
     } catch (error) {
       console.error("Error adding ingredient: ", error);
@@ -35,6 +38,12 @@ function AddIngredient() {
   return (
     <div>
       <h1>Add New Ingredient</h1>
+      <input
+        type="text"
+        placeholder="Ingredient Category"
+        value={category}
+        onChange={(e) => setCategory(e.target.value)}
+      />
       <input
         type="text"
         placeholder="Ingredient Name"

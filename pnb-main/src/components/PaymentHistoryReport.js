@@ -99,12 +99,12 @@ const PaymentHistoryReport = () => {
   const totals = calculateTotals(sortedFilteredData);
 
   return (
-    <div className={`report-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
+    <div className={`report-container₹{sidebarOpen ? 'sidebar-open' : ''}`}>
       <UserSidebar isOpen={sidebarOpen} onToggle={handleSidebarToggle} />
       <div className="report-content">
         <UserHeader onMenuClick={handleSidebarToggle} isSidebarOpen={sidebarOpen} />
 
-        <h2>Payment History Report</h2>
+        <h2 style={{ marginLeft: '10px', marginTop: '100px' }}>Payment History Report</h2>
 
         <div className="filter-section">
           <label htmlFor="dateFilter">Filter by Date:</label>
@@ -118,9 +118,9 @@ const PaymentHistoryReport = () => {
 
         <div className="totals-summary">
           <h3>Daily Totals for {filterDate || 'All Dates'}:</h3>
-          <p>Cash Total: ${totals.Cash.toFixed(2)}</p>
-          <p>Card Total: ${totals.Card.toFixed(2)}</p>
-          <p>UPI Total: ${totals.UPI.toFixed(2)}</p>
+          <p>Cash Total:₹{totals.Cash.toFixed(2)}</p>
+          <p>Card Total:₹{totals.Card.toFixed(2)}</p>
+          <p>UPI Total:₹{totals.UPI.toFixed(2)}</p>
         </div>
 
         {sortedFilteredData.length > 0 ? (
@@ -145,7 +145,7 @@ const PaymentHistoryReport = () => {
                       className="clickable-amount"
                       onClick={() => handleTotalClick(entry.orders)} // Handle click event
                     >
-                      ${typeof entry.total === 'number' ? entry.total.toFixed(2) : parseFloat(entry.total).toFixed(2)}
+                     ₹{typeof entry.total === 'number' ? entry.total.toFixed(2) : parseFloat(entry.total).toFixed(2)}
                     </td>
                     <td>${entry.discountedTotal ? entry.discountedTotal.toFixed(2) : 'N/A'}</td> {/* Display Discounted Total */}
                     <td>{entry.method || 'N/A'}</td>
@@ -163,7 +163,7 @@ const PaymentHistoryReport = () => {
                 <ul>
                   {selectedOrders.map((order, index) => (
                     <li key={index}>
-                      {order.quantity} x {order.name} - ${order.price * order.quantity}
+                      {order.quantity} x {order.name} -₹{order.price * order.quantity}
                     </li>
                   ))}
                 </ul>

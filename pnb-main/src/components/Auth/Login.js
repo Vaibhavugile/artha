@@ -328,9 +328,7 @@ disabled={loading}
       <h1>The simplest way to manage your workforce</h1>
     </div>
 
-    <div className="logo-container">
-      <img src={Logo} alt="Logo" className="logo-image" />
-    </div>
+   
   </div>
   );
 };

@@ -1,33 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs,query, where,} from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
-import UserSidebar from './UserSidebar';  // Import the UserSidebar component
-import UserHeader from './UserHeader';    // Import the UserHeader component
-import { useUser } from './Auth/UserContext'; // Assuming you're using a UserContext for branchCode
- 
-// Assuming you have some custom CSS for this page
+import UserSidebar from './UserSidebar';
+import UserHeader from './UserHeader';
+import { useUser } from './Auth/UserContext';
+import { FaDownload, FaUpload, FaPlus , FaEdit, FaTrash} from 'react-icons/fa';
+import './InventoryDashboard.css'; // Import the same CSS file
+import { useNavigate } from 'react-router-dom';
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // Sidebar toggle state
-  const [branchCode, setBranchCode] = useState(''); // Store branch code
-  const { userData } = useUser(); // Get user data from context
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { userData } = useUser();
+  const navigate = useNavigate();
 
   const handleSidebarToggle = () => {
-    setSidebarOpen(!sidebarOpen); // Toggle sidebar visibility
+    setSidebarOpen(!sidebarOpen);
   };
-  useEffect(() => {
-    if (userData && userData.branchCode) {
-      setBranchCode(userData.branchCode);
-    }
-  }, [userData]);
 
   useEffect(() => {
     const fetchProducts = async () => {
       const q = query(
-        collection(db,'products'),
-        where('branchCode','==',userData.branchCode)
-      )
+        collection(db, 'products'),
+        where('branchCode', '==', userData.branchCode)
+      );
       const productSnapshot = await getDocs(q);
       const productList = productSnapshot.docs.map(doc => ({
         id: doc.id,
@@ -36,26 +32,77 @@ const ProductList = () => {
       setProducts(productList);
     };
     fetchProducts();
-  }, []);
+  }, [userData]);
+
+  const handleExport = () => {
+    // Logic to export products
+  };
+
+  const handleImport = (event) => {
+    const file = event.target.files[0];
+    // Logic to handle import
+  };
+
+  const handleDelete  = () => {
+    // Logic to navigate to Add Product page
+  };
+  const handleEdit = (id) => {
+    navigate(`/editinventory/${id}`);
+  };
+  const handleAddProduct= () => {
+    navigate('/add-product');
+  };
 
   return (
-    <div className={`product-list-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
-      {/* Include the sidebar and header */}
+    <div className={`dashboard-container ${sidebarOpen ? 'sidebar-open' : ''}`}>
       <UserSidebar isOpen={sidebarOpen} onToggle={handleSidebarToggle} />
-      <div className="product-list-content">
+      <div className="dashboard-content">
         <UserHeader onMenuClick={handleSidebarToggle} isSidebarOpen={sidebarOpen} />
 
-        <h2>Product List</h2>
-        {products.length > 0 ? (
-          products.map(product => (
-            <div key={product.id} className="product-item">
-              <h3>{product.name}</h3>
-              <p>Price: ${product.price}</p>
-            </div>
-          ))
-        ) : (
-          <p>No products available</p>
-        )}
+        <h2 style={{ marginLeft: '10px', marginTop: '100px' }}>Product List</h2>
+
+        <div className="action-buttons">
+        <button onClick={handleAddProduct}>
+            <FaPlus /> Add Inventory Item
+          </button>
+          
+          
+        </div>
+
+        <table className="table">
+          <thead>
+            <tr>
+              
+              <th>Name</th>
+              <th>Price</th>
+              <th>Subcategory</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {products.length > 0 ? (
+              products.map(product => (
+                <tr key={product.id}>
+                 
+                  <td>{product.name}</td>
+                  <td>₹{product.price}</td>
+                  <td>{product.subcategory}</td>
+                  <td>
+                    
+                      <div className="action-buttons">
+                        <label onClick={() => handleEdit(product.id)}><FaEdit /></label>
+                        <label onClick={() => handleDelete(product.id)}><FaTrash /></label>
+                      </div>
+                    </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5">No products available</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
